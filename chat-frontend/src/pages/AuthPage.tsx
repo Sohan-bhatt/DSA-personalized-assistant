@@ -38,8 +38,9 @@ export default function AuthPage() {
       localStorage.setItem("user_id", res.user_id);
       setSuccess(mode === "signup" ? "Account created. Redirecting..." : "Welcome back. Redirecting...");
       nav("/", { replace: true });
-    } catch (e: any) {
-      setErr(e?.message || "Auth failed");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Auth failed";
+      setErr(msg);
     } finally {
       setIsLoading(false);
     }

@@ -25,20 +25,26 @@ html, body, #root { height: 100%; }
     overflow: hidden;
   }
 
-  .ripple-card::before {
+  /* Subtle glow ripple */
+  .ripple-card::after {
     content: "";
     position: absolute;
-    inset: -60%;
+    inset: -40%;
     background: radial-gradient(circle, rgba(255,255,255,0.18), rgba(255,255,255,0));
     opacity: 0;
-    transform: scale(0.65);
-    transition: opacity 350ms ease, transform 350ms ease;
+    transform: scale(0.8);
+    transition: opacity 250ms ease, transform 250ms ease;
     z-index: 0;
   }
 
-  .ripple-card:hover::before,
-  .ripple-card:focus-within::before {
+  .ripple-card:hover::after,
+  .ripple-card:focus-within::after {
     opacity: 0.35;
     transform: scale(1);
+  }
+
+  .ripple-card > * {
+    position: relative;
+    z-index: 1;
   }
 }

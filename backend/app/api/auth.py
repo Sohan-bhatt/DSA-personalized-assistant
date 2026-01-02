@@ -8,7 +8,11 @@ from app.db.models import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__truncate_error=False,  # allow >72 bytes by truncating internally
+)
 
 
 def get_db():
@@ -29,15 +33,21 @@ class AuthResponse(BaseModel):
     user_id: str
 
 
+def _sanitize_password(raw: str) -> str:
+    # bcrypt ignores bytes beyond 72; truncate to avoid ValueError
+    return raw.encode("utf-8")[:72].decode("utf-8", errors="ignore")
+
+
 @router.post("/signup", response_model=AuthResponse)
 def signup(payload: AuthRequest, db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.email == payload.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
 
+    password = _sanitize_password(payload.password)
     user = User(
         email=payload.email,
-        hashed_password=pwd_context.hash(payload.password),
+        hashed_password=pwd_context.hash(password),
     )
     db.add(user)
     db.commit()
@@ -50,7 +60,8 @@ def signup(payload: AuthRequest, db: Session = Depends(get_db)):
 @router.post("/login", response_model=AuthResponse)
 def login(payload: AuthRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email).first()
-    if not user or not pwd_context.verify(payload.password, user.hashed_password):
+    password = _sanitize_password(payload.password)
+    if not user or not pwd_context.verify(password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token = uuid.uuid4().hex

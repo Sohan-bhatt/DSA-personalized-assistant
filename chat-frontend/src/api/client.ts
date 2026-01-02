@@ -4,13 +4,24 @@ export function getUserId() {
   return localStorage.getItem("user_id") || "demo_user"
 }
 
-async function jsonFetch<T>(url: string, init: RequestInit) {
-  const res = await fetch(url, init)
-  if (!res.ok) {
-    const text = await res.text()
-    throw new Error(text || `HTTP ${res.status}`)
+async function jsonFetch<T>(url: string, init: RequestInit, timeoutMs = 10000) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const res = await fetch(url, { ...init, signal: controller.signal })
+    if (!res.ok) {
+      const text = await res.text()
+      throw new Error(text || `HTTP ${res.status}`)
+    }
+    return res.json() as Promise<T>
+  } catch (err) {
+    if ((err as Error)?.name === "AbortError") {
+      throw new Error("Request timed out. Is the backend running?")
+    }
+    throw err
+  } finally {
+    clearTimeout(timer)
   }
-  return res.json() as Promise<T>
 }
 
 export async function signup(email: string, password: string) {
@@ -30,13 +41,15 @@ export async function login(email: string, password: string) {
 }
 
 export async function postChat(message: string) {
-  const res = await fetch(`${API}/chat/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_id: getUserId(), message }),
-  })
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  return res.json() as Promise<{ reply: string; topic: string; confidence: number }>
+  return jsonFetch<{ reply: string; topic: string; confidence: number }>(
+    `${API}/chat/`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: getUserId(), message }),
+    },
+    15000
+  )
 }
 
 export async function getReviseTopics() {
