@@ -1,0 +1,30 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+
+# Python artifacts
+*.log
+*.sqlite3
+*.db
+
+# Node/Vite
+chat-frontend/node_modules/
+chat-frontend/dist/
+chat-frontend/.vite/
+chat-frontend/.env.local
+
+# Editor/OS
+.DS_Store
+*.swp
+*.swo
+Thumbs.db
+.idea/
+.vscode/
+
+# Env files
+backend/.env
