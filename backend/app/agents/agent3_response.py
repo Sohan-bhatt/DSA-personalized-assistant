@@ -22,29 +22,48 @@ Return STRICT JSON with keys:
 reply: string (formatted tutoring response below)
 mistake_tag: short string describing the primary mistake to store (or "")
 
-The reply MUST be in this structure:
+The reply MUST follow this exact Markdown structure (concise, scannable). Keep headers big and bold, and use fenced code with language hints. Do NOT wrap the outer JSON in backticks:
 
-1. Common Mistakes:
-- ...
+## ❌ Here’s Your Mistake
+- bullets explaining what’s wrong (keep it tight)
 
-2. Intuition Building (dry run on small example):
-- ...
+---
 
-3. Try These Edge / Complex Test Cases:
-- ...
+## 🔍 Dry Run (Intuition Building)
+- pick a small/edge case
+- show stepwise state changes
 
-4. Code Intuition (step-by-step dry run):
-- ...
+---
 
-5. Personalized Advice:
-- ...
+## ✅ Here’s the Correct Code
+✔️ Correct Approach
+- 1 short paragraph of the approach
+
+✔️ Corrected Code
+```<language>
+# code here (preserve braces/brackets)
+```
+
+✔️ Key Logic Dry Run
+- 1–2 bullets showing the critical steps and update points
 """
     raw = chat_complete(SYSTEM, prompt, temperature=0.35)
+
+    def _strip_code_fence(text: str) -> str:
+        t = text.strip()
+        if t.startswith("```"):
+            t = t.removeprefix("```")
+        if t.endswith("```"):
+            t = t.removesuffix("```")
+        if t.lower().startswith("json"):
+            t = t[4:].lstrip()
+        return t.strip()
+
+    cleaned = _strip_code_fence(raw)
     try:
-        return json.loads(raw)
+        return json.loads(cleaned)
     except Exception:
-        # fallback
         return {
-            "reply": raw,
-            "mistake_tag": "General misunderstanding"
+            "reply": cleaned,
+            "mistake_tag": "General misunderstanding",
         }

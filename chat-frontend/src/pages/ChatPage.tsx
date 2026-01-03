@@ -1,6 +1,8 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { postChat } from "../api/client";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type Msg = { id: string; role: "user" | "assistant"; text: string };
 const uid = () => crypto.randomUUID();
@@ -15,6 +17,7 @@ export default function ChatPage() {
   const [isFocused, setIsFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
 
   const hasHistory = messages.some((m) => m.role === "user");
   const isExpanded = isFocused && !isLoading;
@@ -45,6 +48,13 @@ export default function ChatPage() {
     }
   };
 
+  // Auto-scroll to latest message
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
+    }
+  }, [messages, isLoading]);
+
   const onKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -58,7 +68,7 @@ export default function ChatPage() {
       <div className="fixed left-4 top-4 z-20 flex gap-2">
         <button
           onClick={() => nav("/revise")}
-          className="glass-card ripple-card border-white/10 bg-white/10 px-3 py-2 text-xs hover:border-white/30 transition"
+          className="glass-card ripple-card border-white/10 bg-white/10 px-3 py-2 text-lg hover:border-white/30 transition"
         >
           Revise
         </button>
@@ -67,7 +77,7 @@ export default function ChatPage() {
       <div className="fixed right-4 top-4 z-20 flex gap-2">
         <button
           onClick={logout}
-          className="glass-card ripple-card border-white/10 bg-white/10 px-3 py-2 text-xs hover:border-white/30 transition"
+          className="glass-card ripple-card border-white/10 bg-white/10 px-3 py-2 text-lg hover:border-white/30 transition"
         >
           Logout
         </button>
@@ -76,8 +86,8 @@ export default function ChatPage() {
       {/* INPUT AREA */}
       <div className={hasHistory ? "sticky top-0 z-10" : "flex min-h-[55vh] items-center justify-center"}>
         <div className="w-full bg-gradient-to-b from-white/10 via-transparent to-transparent">
-          <div className="mx-auto w-full px-4 py-5 md:w-3/5">
-            <div className="glass-card ripple-card px-4 py-4">
+          <div className="mx-auto w-full px-6 py-6 md:w-3/5">
+            <div className="glass-card ripple-card px-4 py-5">
               <div className="flex items-end gap-3">
                 <textarea
                   ref={textareaRef}
@@ -90,8 +100,8 @@ export default function ChatPage() {
                   placeholder={isLoading ? "Generating..." : "Type a message..."}
                   disabled={isLoading}
                   className={[
-                    "w-full resize-none rounded-xl bg-zinc-900/60 px-3 py-2",
-                    "text-sm leading-6 outline-none placeholder:text-zinc-500 border border-white/10",
+                    "w-full resize-none rounded-xl bg-zinc-900/60 px-5 py-8",
+                    "text-lg leading-6 outline-none placeholder:text-zinc-500 border border-white/10",
                     "focus:border-white/40 focus:bg-zinc-900/40 transition",
                     isLoading ? "opacity-60" : "",
                   ].join(" ")}
@@ -100,7 +110,7 @@ export default function ChatPage() {
                   onClick={sendMessage}
                   disabled={isLoading || !input.trim()}
                   className={[
-                    "rounded-xl px-4 py-2 text-sm font-semibold transition border",
+                    "rounded-xl px-5 py-6 text-lg font-semibold transition border",
                     isLoading || !input.trim()
                       ? "cursor-not-allowed border-white/10 bg-white/10 text-zinc-500"
                       : "border-white/20 bg-white text-zinc-900 hover:bg-white/90",
@@ -109,7 +119,7 @@ export default function ChatPage() {
                   {isLoading ? "..." : "Send"}
                 </button>
               </div>
-              <div className="mt-2 flex items-center justify-between px-1 text-xs text-zinc-400">
+              <div className="mt-2 flex items-center justify-between px-1 text-lg text-zinc-400">
                 <span>Enter to send • Shift+Enter for newline</span>
                 <span className="text-emerald-300/80">
                   {isExpanded ? "Focused" : isLoading ? "Thinking..." : "Idle"}
@@ -122,7 +132,7 @@ export default function ChatPage() {
 
       {/* MESSAGES (60% width => 20% margins each side on desktop) */}
       <div className="mx-auto w-full px-4 pb-12 md:w-3/5">
-        <div className={hasHistory ? "pt-6 space-y-3" : "space-y-3"}>
+        <div ref={listRef} className={hasHistory ? "pt-6 space-y-3" : "space-y-3"}>
           {messages.map((m) => (
             <Bubble key={m.id} role={m.role} text={m.text} />
           ))}
@@ -139,14 +149,16 @@ function Bubble({ role, text, subtle }: { role: "user" | "assistant"; text: stri
     <div className={["flex", isUser ? "justify-end" : "justify-start"].join(" ")}>
       <div
         className={[
-          "max-w-[90%] md:max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-6 border ripple-card",
+          "max-w-[90%] md:max-w-[80%] rounded-2xl px-4 py-3 text-lg leading-6 border ripple-card",
           isUser
             ? "bg-white text-zinc-900 border-white/70 shadow-md"
             : "glass-card border-white/10 text-zinc-50",
           subtle ? "opacity-70" : "opacity-100",
         ].join(" ")}
       >
-        {text}
+        <div className="prose prose-invert prose-lg max-w-none">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+        </div>
       </div>
     </div>
   );

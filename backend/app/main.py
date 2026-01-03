@@ -17,6 +17,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "https://your-frontend.onrender.com",  # replace with actual Render frontend URL
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -55,3 +56,8 @@ def ensure_demo_user():
 @app.on_event("startup")
 def startup_seed():
     ensure_demo_user()
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
