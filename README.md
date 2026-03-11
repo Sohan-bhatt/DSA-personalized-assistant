@@ -1,36 +1,131 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Learning Assistant (Prototype)
 
-## Getting Started
+An AI-assisted learning workspace where users can:
+- organize study content in folders/files,
+- chat with an LLM using file-grounded context,
+- create and review revision notes,
+- track confusion/mistake patterns over time.
 
-First, run the development server:
+This is currently a prototype focused on UPSC learners, but the architecture is domain-agnostic and can be extended for other academic streams.
+
+## Current Status
+
+This project is in active development (prototype/MVP stage).  
+Core workflows are working end-to-end, and the next phase is improving agent quality, personalization, and scale readiness.
+
+## Key Features
+
+- AI chat on top of user-managed study files
+- Agent-based confusion/error categorization:
+  - `CONFUSION`
+  - `MISTAKE`
+  - `CONCEPT_MISUNDERSTANDING`
+- Daily revision pipeline for unresolved notes
+- Progress dashboard:
+  - resolution rate
+  - review counts
+  - error-type breakdown
+  - 7-day trend summary
+- Hierarchical directories + file and note management
+
+## Architecture
+
+- Frontend: Next.js (App Router), TypeScript
+- Backend: FastAPI, Python
+- LLM/Agent layer: Gemini + PydanticAI agents
+- Data layer: SQLAlchemy (backend), Prisma (Next.js routes), SQLite/PostgreSQL via `DATABASE_URL`
+
+## Repository Structure
+
+```text
+.
+├── src/                    # Next.js frontend + API routes
+├── backend/                # FastAPI app, agents, models, API routers
+├── prisma/                 # Prisma schema/migrations
+├── public/                 # Static assets
+└── render.yaml             # Render backend blueprint
+```
+
+## Local Setup
+
+### 1) Clone and install frontend deps
+
+```bash
+npm install
+```
+
+### 2) Backend setup
+
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+cd ..
+```
+
+### 3) Environment variables
+
+Create:
+- root `.env` from `.env.example`
+- `backend/.env` from `backend/.env.example`
+
+Minimum required:
+- `GEMINI_API_KEY`
+- `NEXT_PUBLIC_API_URL` (frontend, default local backend URL)
+- `DATABASE_URL` (recommended for production)
+- `CORS_ORIGINS` (backend allowed frontend origins)
+
+### 4) Run backend
+
+```bash
+cd backend
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### 5) Run frontend
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Frontend: `http://localhost:3000`  
+Backend: `http://127.0.0.1:8000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Backend (Render)
 
-## Learn More
+- Use `render.yaml` or create a Web Service with:
+  - Root directory: `backend`
+  - Build: `pip install -r requirements.txt`
+  - Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Set env vars: `GEMINI_API_KEY`, `DATABASE_URL`, `CORS_ORIGINS`
 
-To learn more about Next.js, take a look at the following resources:
+### Frontend (Vercel)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Import the same repo
+- Root directory: repository root
+- Set env vars:
+  - `NEXT_PUBLIC_API_URL=https://<your-render-backend>`
+  - `GEMINI_API_KEY=<your_key>` (if using server-side routes requiring Gemini)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## API Health Check
 
-## Deploy on Vercel
+```bash
+GET /health
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Expected response:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```json
+{ "status": "healthy" }
+```
+
+## Roadmap
+
+- Better prompt orchestration and evaluation for agent outputs
+- Multi-domain subject profiles (beyond UPSC)
+- Retrieval layer for larger document sets
+- Personalization and adaptive revision scheduling
+- Stronger testing and observability

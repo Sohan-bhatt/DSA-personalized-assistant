@@ -358,7 +358,7 @@ export default function FilePage() {
     };
 
     restoreSelection();
-    document.execCommand("styleWithCSS", false, false);
+    document.execCommand("styleWithCSS", false, "false");
     document.execCommand("fontSize", false, fontSizeMap[fontSizePx] || "3");
     setSelectedSize(fontSizePx);
     saveSelection();
