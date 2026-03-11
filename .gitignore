@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+frontend/node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -16,13 +17,20 @@
 # next.js
 /.next/
 /out/
+frontend/.next/
+frontend/out/
 
 # production
 /build
+dist/
 
 # misc
 .DS_Store
 *.pem
+*.log
+logs/
+.cache/
+.turbo/
 
 # debug
 npm-debug.log*
@@ -32,6 +40,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+!backend/.env.example
 
 # vercel
 .vercel
@@ -39,3 +49,35 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# virtual environments
+venv/
+.venv/
+backend/venv/
+backend/.venv/
+
+# local databases
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# IDE/editor
+.vscode/
+.idea/
+.envrc
